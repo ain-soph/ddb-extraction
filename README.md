@@ -9,6 +9,14 @@
 ## Usage:
 
 ```
+extract_ddi.py [-h] [--src-path SRC_PATH]
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --src-path SRC_PATH  source ddi file path
+```
+
+```
 extract_wav.py [-h] [--src-path SRC_PATH] [--dst-path DST_PATH] [--merge] [--silence-interval SILENCE_INTERVAL]
 
 optional arguments:
