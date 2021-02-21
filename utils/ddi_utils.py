@@ -214,11 +214,15 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
             assert ddi_data.read(2) == b'\x01\x00'
             stap_data['unknown2'] = str(ddi_data.read(0x19))[2:-1]
             assert ddi_data.read(4) == b'\x00\x00\x00\x01'
-            stap_idx = ddi_data.read(4).decode().strip('\x00')
+            stap_idx = int(ddi_data.read(4).decode().strip('\x00'))
             assert stap_idx not in stau_data['stap'].keys()
             stau_data['stap'][stap_idx] = stap_data
+        stau_data['stap'] = {k: stau_data['stap'][k]
+                             for k in sorted(stau_data['stap'].keys())}
         stau_data['phoneme'] = read_str(ddi_data)
         sta_data['stau'][stau_idx] = stau_data
+    sta_data['stau'] = {k: sta_data['stau'][k]
+                        for k in sorted(sta_data['stau'].keys())}
     assert read_str(ddi_data) == 'normal'
     assert read_str(ddi_data) == 'stationary'
     sta_data['singer_id'] = env['singer_id']
