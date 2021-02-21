@@ -79,19 +79,21 @@ def read_phdc(ddi_data: io.BytesIO) -> dict:
         category_data[key] = []
         offset += 0x24
         while(offset < len(category_bytes) and category_bytes[offset] == 0):
-            value = category_bytes[offset:offset + 7]
-            start_idx = 0
-            for i in range(7):
-                if category_bytes[i] != 0:
-                    start_idx = 0
-                    break
-            value = value[start_idx:]
             if category_bytes[offset+7] == 0x40:
+                value = category_bytes[offset:offset + 7]
+                start_idx = 0
+                for i in range(7):
+                    if value[i] != 0:
+                        start_idx = i
+                        break
+                value = str(value[start_idx:])
                 category_data[key].append(value)
             else:
                 assert int.from_bytes(category_bytes[offset:offset + 8],
                                       byteorder='little') == 0
+                category_data[key].append('')
             offset += 8
+    phdc_data['category'] = category_data
 
     # hash string
     phdc_data['hash'] = ddi_data.read(0x20).decode()
