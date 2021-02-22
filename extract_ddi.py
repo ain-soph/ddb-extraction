@@ -8,7 +8,8 @@ import os
 def parse_args(args: list[str] = None):
     # initialize parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src-path', help='source ddi file path')
+    parser.add_argument('--src-path', required=True,
+                        help='source ddi file path')
 
     # parse args
     args = parser.parse_args(args)
