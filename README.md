@@ -39,6 +39,14 @@ optional arguments:
 `ddi.yml` file strucutre:
 ```
 {
+  'vqm': {
+          'vqm': {
+              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
+                      }
+          }
+
   'sta': {
           'phoneme': {
               idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
