@@ -300,7 +300,7 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
         assert ddi_data.read(8) == b'\xFF'*8
         artp_num = int.from_bytes(ddi_data.read(4), byteorder='little')
         for j in range(artp_num):
-            artp_data = {'snd': '', 'snd_mark': '', 'epr': []}
+            artp_data = {'snd': '', 'epr': []}
             artp_data['unknown0'] = bytes_to_str(ddi_data.read(8))
             assert ddi_data.read(4).decode() == 'ARTp'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
