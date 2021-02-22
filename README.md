@@ -33,3 +33,41 @@ optional arguments:
   --src-path SRC_PATH  source ddb file path
   --dst-path DST_PATH  destination extract path, default to be "./[name]/frm2.zip"
 ```
+
+
+# ddi.yml
+`ddi.yml` file strucutre:
+```
+{
+  'sta': {
+          'phoneme': {
+              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
+                      }
+          'phoneme': {
+              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
+                      }
+          }
+
+  'art': {
+          'phoneme[space]phoneme': {
+              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
+                      }
+          'phoneme[space]phoneme': {
+              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
+                      }
+          'phoneme[space]phoneme[space]phoneme': {
+              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
+              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
+                      }
+          }
+}
+```

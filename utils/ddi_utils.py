@@ -4,7 +4,7 @@ import io
 import os
 import yaml
 
-env = {'singer_id': None, 'ddi_bytes': None}
+env = {'unknown': None, 'ddi_bytes': None}
 
 
 def bytes_to_str(data: bytes) -> str:
@@ -68,13 +68,38 @@ def read_ddi(ddi_bytes: bytes, dst_path: str):
                             sort_keys=False)
         art_f.write(art_str)
 
+    # VQM
+    vqm_offset = ddi_bytes.find(b'\xFF'*8+b'VQM ')
+    vqm_data = None
+    if vqm_offset != -1:
+        vqm_offset -= 0xC2
+        ddi_data.seek(vqm_offset)
+        vqm_data = read_vqm(ddi_data)
+        with open(os.path.join(dst_path, 'vqm.yml'), mode='w', encoding='utf-8') as vqm_f:
+            vqm_str = yaml.dump(vqm_data, default_flow_style=False,
+                                sort_keys=False)
+            vqm_f.write(vqm_str)
+
     # DDI convert
     ddi_data = {
         'sta': {},
         'art': {},
     }
+
+    if vqm_data is not None:
+        ddi_data = {
+            'vqm': {},
+            'sta': {},
+            'art': {},
+        }
+
+    vqm_dict = {}
+    for idx, vqmp in vqm_data.items():
+        vqm_dict[idx] = {'snd': vqmp['snd'], 'epr': vqmp['epr']}
+    ddi_data['vqm'] = {'vqm': vqm_dict}
+
     sta_dict = {}
-    for stau in sta_data['stau'].values():
+    for stau in sta_data.values():
         stau_dict = {}
         for idx, stap in stau['stap'].items():
             stau_dict[idx] = {'snd': stap['snd'], 'epr': stap['epr']}
@@ -220,7 +245,7 @@ def read_dbv(ddi_data: io.BytesIO):
 
 
 def read_sta(ddi_data: io.BytesIO) -> dict:
-    sta_data = {'singer_id': None, 'stau': {}}
+    sta_data = {}
     assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
     assert int.from_bytes(read_arr(ddi_data), byteorder='little') == 1
     assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
@@ -249,11 +274,11 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 1
             stap_data['unknown1'] = bytes_to_str(ddi_data.read(0x12))
             assert ddi_data.read(8) == b'\x00\x00\x00\x00\x9A\x99\x19\x3F'
-            singer_id = bytes_to_str(ddi_data.read(4))
-            if env['singer_id'] is None:
-                env['singer_id'] = singer_id
+            unknown = bytes_to_str(ddi_data.read(4))
+            if env['unknown'] is None:
+                env['unknown'] = unknown
             else:
-                assert env['singer_id'] == singer_id
+                assert env['unknown'] == unknown
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 2
             assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0x3D
@@ -276,8 +301,9 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
             assert ddi_data.read(4) == b'\x44\xAC\x00\x00'
             assert ddi_data.read(2) == b'\x01\x00'
             snd_identifier = int.from_bytes(ddi_data.read(4), byteorder='little')
+            # TODO: why this number?
             snd_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
-            stap_data['snd'] = f'{snd_offset:016x}_{snd_identifier:08x}'
+            stap_data['snd'] = f'{snd_offset-0x812:016x}_{snd_identifier:08x}'
 
             stap_data['unknown2'] = bytes_to_str(ddi_data.read(0xD))
             assert ddi_data.read(4) == b'\x00\x00\x00\x01'
@@ -287,12 +313,10 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
         stau_data['stap'] = {k: stau_data['stap'][k]
                              for k in sorted(stau_data['stap'].keys())}
         stau_data['phoneme'] = read_str(ddi_data)
-        sta_data['stau'][stau_idx] = stau_data
-    sta_data['stau'] = {k: sta_data['stau'][k]
-                        for k in sorted(sta_data['stau'].keys())}
+        sta_data[stau_idx] = stau_data
+    sta_data = {k: sta_data[k] for k in sorted(sta_data.keys())}
     assert read_str(ddi_data) == 'normal'
     assert read_str(ddi_data) == 'stationary'
-    sta_data['singer_id'] = env['singer_id']
     return sta_data
 
 
@@ -350,11 +374,11 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 1
             artp_data['unknown1'] = bytes_to_str(ddi_data.read(0x12))
             assert ddi_data.read(8) == b'\x00\x00\x00\x00\x9A\x99\x19\x3F'
-            singer_id = bytes_to_str(ddi_data.read(4))
-            if env['singer_id'] is None:
-                env['singer_id'] = singer_id
+            unknown = bytes_to_str(ddi_data.read(4))
+            if env['unknown'] is None:
+                env['unknown'] = unknown
             else:
-                assert env['singer_id'] == singer_id
+                assert env['unknown'] == unknown
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 2
             # TODO: This doesn't seem to be an index actually
             artp_idx = int.from_bytes(ddi_data.read(8), byteorder='little')
@@ -376,9 +400,10 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
             assert ddi_data.read(4) == b'\x44\xAC\x00\x00'
             assert ddi_data.read(2) == b'\x01\x00'
             snd_identifier = int.from_bytes(ddi_data.read(4), byteorder='little')
+            # TODO: why this number?
             snd_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
+            artp_data['snd'] = f'{snd_offset-0x12:016x}_{snd_identifier:08x}'
             assert int.from_bytes(ddi_data.read(8), byteorder='little') == snd_offset+0x800
-            artp_data['snd'] = f'{snd_offset:016x}_{snd_identifier:08x}'
 
             ddi_bytes: bytes = env['ddi_bytes'][ddi_data.tell():]
             unknown2_length = ddi_bytes.find(b'default')-4
@@ -402,3 +427,68 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
     if len(art_data['artu'].keys()) == 0:
         del art_data['artu']
     return art_idx, art_data
+
+
+def read_vqm(ddi_data: io.BytesIO) -> dict:
+    vqm_data = {}
+    assert ddi_data.read(8) == b'\xFF'*8
+    assert int.from_bytes(read_arr(ddi_data), byteorder='little') == 3
+    assert ddi_data.read(8) == b'\xFF'*8
+    assert int.from_bytes(read_arr(ddi_data), byteorder='little') == 0
+    assert read_str(ddi_data) == 'notetonote'
+    assert ddi_data.read(8) == b'\xFF'*8
+    assert int.from_bytes(read_arr(ddi_data), byteorder='little') == 0
+    assert read_str(ddi_data) == 'attack'
+    assert ddi_data.read(8) == b'\xFF'*8
+    assert int.from_bytes(read_arr(ddi_data), byteorder='little') == 0
+    assert read_str(ddi_data) == 'release'
+    assert read_str(ddi_data) == 'note'
+    assert ddi_data.read(8) == b'\xFF'*8
+    assert int.from_bytes(read_arr(ddi_data), byteorder='little') == 0
+    assert read_str(ddi_data) == 'vibrato'
+    assert ddi_data.read(8) == b'\xFF'*8
+
+    assert ddi_data.read(4).decode() == 'VQM '
+    assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
+    assert int.from_bytes(ddi_data.read(4), byteorder='little') == 1
+    assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
+    assert int.from_bytes(ddi_data.read(4), byteorder='little') == 1
+    assert ddi_data.read(8) == b'\xFF'*8
+
+    assert ddi_data.read(4).decode() == 'VQMu'
+    assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
+    assert int.from_bytes(ddi_data.read(4), byteorder='little') == 1
+    assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
+
+    vqmp_num = int.from_bytes(ddi_data.read(4), byteorder='little')
+    assert int.from_bytes(ddi_data.read(4), byteorder='little') == vqmp_num
+    for i in range(vqmp_num):
+        vqmp_data = {'snd': '', 'epr': []}
+        assert ddi_data.read(8) == b'\xFF'*8
+        assert ddi_data.read(4).decode() == 'VQMp'
+        assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
+        assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
+        assert int.from_bytes(ddi_data.read(4), byteorder='little') == 1
+        vqmp_data['unknown'] = bytes_to_str(ddi_data.read(0x12))
+        assert ddi_data.read(8) == b'\x00\x00\x00\x00\x9A\x99\x19\x3F'
+        bytes_to_str(ddi_data.read(4))    # TODO: that may not be same as env['unknown']
+        assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
+        assert ddi_data.read(4) == b'\xFF'*4
+        epr_num = int.from_bytes(ddi_data.read(4), byteorder='little')
+        epr_list: list[str] = []
+        for k in range(epr_num):
+            epr_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
+            epr_list.append(f'{epr_offset:0>8x}')
+        vqmp_data['epr'] = epr_list
+        assert ddi_data.read(4) == b'\x44\xAC\x00\x00'
+        assert ddi_data.read(2) == b'\x01\x00'
+        snd_identifier = int.from_bytes(ddi_data.read(4), byteorder='little')
+        snd_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
+        vqmp_data['snd'] = f'{snd_offset:016x}_{snd_identifier:08x}'
+        assert ddi_data.read(0x10) == b'\xFF'*0x10
+        vqmp_idx = int(read_str(ddi_data))
+        vqm_data[vqmp_idx] = vqmp_data
+    assert read_str(ddi_data) == 'GROWL'
+    assert read_str(ddi_data) == 'vqm'
+    assert read_str(ddi_data) == 'voice'
+    return vqm_data

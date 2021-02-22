@@ -94,7 +94,7 @@ def main():
         else:
             bytes_f = io.BytesIO()
             # TODO: the filename should be reconsidered.
-            file_path = f'wav/{start_idx+0x12:016x}_{identifier:08x}.wav'
+            file_path = f'wav/{start_idx:016x}_{identifier:08x}.wav'
             with wave.open(bytes_f, 'wb') as wav_f:
                 wav_f: Wave_write
                 wav_f.setparams(wav_params)
