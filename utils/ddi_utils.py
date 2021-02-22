@@ -92,11 +92,10 @@ def read_ddi(ddi_bytes: bytes, dst_path: str):
             'sta': {},
             'art': {},
         }
-
-    vqm_dict = {}
-    for idx, vqmp in vqm_data.items():
-        vqm_dict[idx] = {'snd': vqmp['snd'], 'epr': vqmp['epr']}
-    ddi_data['vqm'] = {'vqm': vqm_dict}
+        vqm_dict = {}
+        for idx, vqmp in vqm_data.items():
+            vqm_dict[idx] = {'snd': vqmp['snd'], 'epr': vqmp['epr']}
+        ddi_data['vqm'] = {'vqm': vqm_dict}
 
     sta_dict = {}
     for stau in sta_data.values():
