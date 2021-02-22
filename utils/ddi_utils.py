@@ -26,6 +26,7 @@ def read_arr(data: io.BytesIO) -> bytes:
 
 
 def read_ddi(ddi_bytes: bytes, dst_path: str):
+
     env['ddi_bytes'] = ddi_bytes
     ddi_data = io.BytesIO(ddi_bytes)
     # PHDC
@@ -66,6 +67,42 @@ def read_ddi(ddi_bytes: bytes, dst_path: str):
         art_str = yaml.dump(art_data, default_flow_style=False,
                             sort_keys=False)
         art_f.write(art_str)
+
+    # DDI convert
+    ddi_data = {
+        'sta': {},
+        'art': {},
+    }
+    sta_dict = {}
+    for stau in sta_data['stau'].values():
+        stau_dict = {}
+        for idx, stap in stau['stap'].items():
+            stau_dict[idx] = {'snd': stap['snd'], 'epr': stap['epr']}
+        sta_dict[stau['phoneme']] = stau_dict
+    ddi_data['sta'] = {key: sta_dict[key] for key in sorted(sta_dict.keys())}
+
+    art_dict = {}
+    for art in art_data.values():
+        if 'artu' in art.keys():
+            for artu in art['artu'].values():
+                key = art['phoneme']+' '+artu['phoneme']
+                art_dict[key] = []
+                for artp in artu['artp'].values():
+                    art_dict[key].append({'snd': artp['snd'], 'epr': artp['epr']})
+        if 'art' in art.keys():
+            for sub_art in art['art'].values():
+                if 'artu' in sub_art.keys():
+                    for artu in sub_art['artu'].values():
+                        key = art['phoneme']+' '+sub_art['phoneme']+' '+artu['phoneme']
+                        art_dict[key] = []
+                        for artp in artu['artp'].values():
+                            art_dict[key].append({'snd': artp['snd'], 'epr': artp['epr']})
+    ddi_data['art'] = {key: art_dict[key] for key in sorted(art_dict.keys())}
+
+    with open(os.path.join(dst_path, 'ddi.yml'), mode='w', encoding='utf-8') as ddi_f:
+        ddi_str = yaml.dump(ddi_data, default_flow_style=False,
+                            sort_keys=False)
+        ddi_f.write(ddi_str)
 
 
 def read_phdc(ddi_data: io.BytesIO) -> dict:
@@ -204,7 +241,7 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
         assert ddi_data.read(8) == b'\xFF'*8
         stap_num = int.from_bytes(ddi_data.read(4), byteorder='little')
         for j in range(stap_num):
-            stap_data = {'snd': '', 'epr': []}
+            stap_data = {'snd': '', 'snd_unknown': '', 'epr': []}
             assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
             assert ddi_data.read(4).decode() == 'STAp'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -223,8 +260,8 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
             assert ddi_data.read(4).decode() == 'EMPT'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
             assert read_str(ddi_data) == 'SND'
-            snd = int.from_bytes(ddi_data.read(4), byteorder='little')
-            stap_data['snd'] = f'{snd:08x}'
+            unknown_snd = int.from_bytes(ddi_data.read(4), byteorder='little')
+            stap_data['snd_unknown'] = f'{unknown_snd:08x}'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
             assert ddi_data.read(4).decode() == 'EMPT'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -238,7 +275,11 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
             stap_data['epr'] = epr_list
             assert ddi_data.read(4) == b'\x44\xAC\x00\x00'
             assert ddi_data.read(2) == b'\x01\x00'
-            stap_data['unknown2'] = bytes_to_str(ddi_data.read(0x19))
+            snd_identifier = int.from_bytes(ddi_data.read(4), byteorder='little')
+            snd_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
+            stap_data['snd'] = f'{snd_offset:016x}_{snd_identifier:08x}'
+
+            stap_data['unknown2'] = bytes_to_str(ddi_data.read(0xD))
             assert ddi_data.read(4) == b'\x00\x00\x00\x01'
             stap_idx = int(ddi_data.read(4).decode().strip('\x00'))
             assert stap_idx not in stau_data['stap'].keys()
@@ -269,6 +310,7 @@ def read_art(ddi_data: io.BytesIO) -> dict:
         assert ddi_data.read(4).decode() == 'ART '
         art_idx, art_data = read_art_block(ddi_data)
         total_art_data[art_idx] = art_data
+    total_art_data = {key: total_art_data[key] for key in sorted(total_art_data.keys())}
     return total_art_data
 
 
@@ -300,7 +342,7 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
         assert ddi_data.read(8) == b'\xFF'*8
         artp_num = int.from_bytes(ddi_data.read(4), byteorder='little')
         for j in range(artp_num):
-            artp_data = {'snd': '', 'epr': []}
+            artp_data = {'snd': '', 'snd_unknown': '', 'epr': []}
             artp_data['unknown0'] = bytes_to_str(ddi_data.read(8))
             assert ddi_data.read(4).decode() == 'ARTp'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -314,12 +356,13 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
             else:
                 assert env['singer_id'] == singer_id
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 2
+            # TODO: This doesn't seem to be an index actually
             artp_idx = int.from_bytes(ddi_data.read(8), byteorder='little')
             assert ddi_data.read(4).decode() == 'EMPT'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
             assert read_str(ddi_data) == 'SND'
-            snd = int.from_bytes(ddi_data.read(4), byteorder='little')
-            artp_data['snd'] = f'{snd:08x}'
+            unknown_snd = int.from_bytes(ddi_data.read(4), byteorder='little')
+            artp_data['snd_unknown'] = f'{unknown_snd:08x}'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
             assert ddi_data.read(4).decode() == 'EMPT'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -332,6 +375,10 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
             artp_data['epr'] = epr_list
             assert ddi_data.read(4) == b'\x44\xAC\x00\x00'
             assert ddi_data.read(2) == b'\x01\x00'
+            snd_identifier = int.from_bytes(ddi_data.read(4), byteorder='little')
+            snd_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
+            assert int.from_bytes(ddi_data.read(8), byteorder='little') == snd_offset+0x800
+            artp_data['snd'] = f'{snd_offset:016x}_{snd_identifier:08x}'
 
             ddi_bytes: bytes = env['ddi_bytes'][ddi_data.tell():]
             unknown2_length = ddi_bytes.find(b'default')-4

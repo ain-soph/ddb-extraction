@@ -82,9 +82,8 @@ def main():
         if offset > length:
             break
         pcm_data = ddb_data[start_idx+18: offset]
-        # This doesn't seem to be the file_id actually.
-        # file_id = int.from_bytes(ddb_data[start_idx+14:start_idx+18],
-        #                          byteorder='little')
+        identifier = int.from_bytes(ddb_data[start_idx+14:start_idx+18],
+                                    byteorder='little')
 
         counter += 1
         print(f'{counter:<10d} progress: {offset:0>8x} / {length:0>8x}')
@@ -95,7 +94,7 @@ def main():
         else:
             bytes_f = io.BytesIO()
             # TODO: the filename should be reconsidered.
-            file_path = f'wav/{counter}.wav'
+            file_path = f'wav/{start_idx+0x12:016x}_{identifier:08x}.wav'
             with wave.open(bytes_f, 'wb') as wav_f:
                 wav_f: Wave_write
                 wav_f.setparams(wav_params)

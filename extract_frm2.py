@@ -55,12 +55,11 @@ def main():
         if offset > length:
             break
         frm2_data = ddb_data[start_idx: offset]
-        file_id = f'{start_idx:0>8x}'
 
         counter += 1
-        print(f'{counter:<10d}{file_id=} progress: {offset:0>8x} / {length:0>8x}')
+        print(f'{counter:<10d} progress: {offset:0>8x} / {length:0>8x}')
 
-        file_path = f'frm2/{file_id}.frm2'
+        file_path = f'frm2/{start_idx:0>8x}.frm2'
         zip_f.writestr(file_path, frm2_data)
         print('    frm2 saved at: ', file_path)
     zip_f.close()
