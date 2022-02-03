@@ -6,6 +6,10 @@ import yaml
 
 env = {'unknown': None, 'ddi_bytes': None}
 
+artp_type = dict[str, str | list[str]]
+artu_type = dict[str, str | dict[int, artp_type]]
+art_type = dict[str, str | dict[int, artu_type | dict]]
+
 
 def bytes_to_str(data: bytes) -> str:
     return ' '.join([f'{piece:02x}' for piece in list(data)])
@@ -25,15 +29,22 @@ def read_arr(data: io.BytesIO) -> bytes:
 # ----------------------------------------- #
 
 
-def read_ddi(ddi_bytes: bytes, dst_path: str, save_temp: bool = False, cat_only: bool = False):
+def read_ddi(ddi_bytes: bytes, dst_path: str,
+             save_temp: bool = False, cat_only: bool = False):
+    sta_data: dict[int, artu_type]
+    art_data: dict[int, art_type]
+    vqm_data: dict[int, artp_type]
     if cat_only:
-        with open(os.path.join(dst_path, 'sta.yml'), mode='r', encoding='utf-8') as sta_f:
+        with open(os.path.join(dst_path, 'sta.yml'), mode='r',
+                  encoding='utf-8') as sta_f:
             sta_data = yaml.load(sta_f)
-        with open(os.path.join(dst_path, 'art.yml'), mode='r', encoding='utf-8') as art_f:
+        with open(os.path.join(dst_path, 'art.yml'), mode='r',
+                  encoding='utf-8') as art_f:
             art_data = yaml.load(art_f)
         vqm_data = None
         if os.path.isfile(os.path.join(dst_path, 'vqm.yml')):
-            with open(os.path.join(dst_path, 'vqm.yml'), mode='r', encoding='utf-8') as vqm_f:
+            with open(os.path.join(dst_path, 'vqm.yml'), mode='r',
+                      encoding='utf-8') as vqm_f:
                 vqm_data = yaml.load(vqm_f)
     else:
         env['ddi_bytes'] = ddi_bytes
@@ -41,7 +52,8 @@ def read_ddi(ddi_bytes: bytes, dst_path: str, save_temp: bool = False, cat_only:
         # PHDC
         phdc_data = read_phdc(ddi_data)
         if save_temp:
-            with open(os.path.join(dst_path, 'phdc.yml'), mode='w', encoding='utf-8') as phdc_f:
+            with open(os.path.join(dst_path, 'phdc.yml'), mode='w',
+                      encoding='utf-8') as phdc_f:
                 phdc_str = yaml.dump(phdc_data, default_flow_style=False,
                                      sort_keys=False)
                 phdc_f.write(phdc_str)
@@ -51,7 +63,8 @@ def read_ddi(ddi_bytes: bytes, dst_path: str, save_temp: bool = False, cat_only:
         ddi_data.seek(tdb_offset)
         tdb_data = read_tdb(ddi_data)
         if save_temp:
-            with open(os.path.join(dst_path, 'tdb.yml'), mode='w', encoding='utf-8') as tdb_f:
+            with open(os.path.join(dst_path, 'tdb.yml'), mode='w',
+                      encoding='utf-8') as tdb_f:
                 tdb_str = yaml.dump(tdb_data, default_flow_style=False,
                                     sort_keys=False)
                 tdb_f.write(tdb_str)
@@ -66,7 +79,8 @@ def read_ddi(ddi_bytes: bytes, dst_path: str, save_temp: bool = False, cat_only:
         ddi_data.seek(sta_offset)
         sta_data = read_sta(ddi_data)
         if save_temp:
-            with open(os.path.join(dst_path, 'sta.yml'), mode='w', encoding='utf-8') as sta_f:
+            with open(os.path.join(dst_path, 'sta.yml'), mode='w',
+                      encoding='utf-8') as sta_f:
                 sta_str = yaml.dump(sta_data, default_flow_style=False,
                                     sort_keys=False)
                 sta_f.write(sta_str)
@@ -76,7 +90,8 @@ def read_ddi(ddi_bytes: bytes, dst_path: str, save_temp: bool = False, cat_only:
         ddi_data.seek(art_offset)
         art_data = read_art(ddi_data)
         if save_temp:
-            with open(os.path.join(dst_path, 'art.yml'), mode='w', encoding='utf-8') as art_f:
+            with open(os.path.join(dst_path, 'art.yml'), mode='w',
+                      encoding='utf-8') as art_f:
                 art_str = yaml.dump(art_data, default_flow_style=False,
                                     sort_keys=False)
                 art_f.write(art_str)
@@ -89,19 +104,20 @@ def read_ddi(ddi_bytes: bytes, dst_path: str, save_temp: bool = False, cat_only:
             ddi_data.seek(vqm_offset)
             vqm_data = read_vqm(ddi_data)
             if save_temp:
-                with open(os.path.join(dst_path, 'vqm.yml'), mode='w', encoding='utf-8') as vqm_f:
+                with open(os.path.join(dst_path, 'vqm.yml'), mode='w',
+                          encoding='utf-8') as vqm_f:
                     vqm_str = yaml.dump(vqm_data, default_flow_style=False,
                                         sort_keys=False)
                     vqm_f.write(vqm_str)
-
     # DDI convert
-    ddi_data = {
+    ddi_data_dict: dict[str, dict[str, list[artp_type]]]
+    ddi_data_dict = {
         'sta': {},
         'art': {},
     }
 
     if vqm_data is not None:
-        ddi_data = {
+        ddi_data_dict = {
             'vqm': {},
             'sta': {},
             'art': {},
@@ -109,41 +125,52 @@ def read_ddi(ddi_bytes: bytes, dst_path: str, save_temp: bool = False, cat_only:
         vqm_dict = []
         for idx, vqmp in vqm_data.items():
             vqm_dict.append({'snd': vqmp['snd'], 'epr': vqmp['epr']})
-        ddi_data['vqm'] = {'vqm': vqm_dict}
+        ddi_data_dict['vqm'] = {'vqm': vqm_dict}
 
-    sta_dict = {}
+    sta_dict: dict[str, list[artp_type]] = {}
     for stau in sta_data.values():
-        stau_dict = []
+        stau_dict: list[artp_type] = []
         for idx, stap in stau['stap'].items():
             stau_dict.append({'snd': stap['snd'], 'epr': stap['epr']})
         sta_dict[stau['phoneme']] = stau_dict
-    ddi_data['sta'] = {key: sta_dict[key] for key in sorted(sta_dict.keys())}
+    ddi_data_dict['sta'] = {key: sta_dict[key]
+                            for key in sorted(sta_dict.keys())}
 
-    art_dict = {}
+    art_dict: dict[str, list[artp_type]] = {}
     for art in art_data.values():
         if 'artu' in art.keys():
             for artu in art['artu'].values():
                 key = art['phoneme']+' '+artu['phoneme']
                 art_dict[key] = []
                 for artp in artu['artp'].values():
-                    art_dict[key].append({'snd': artp['snd'], 'epr': artp['epr']})
+                    art_dict[key].append({'snd': artp['snd'],
+                                          'epr': artp['epr']})
         if 'art' in art.keys():
             for sub_art in art['art'].values():
+                sub_art: art_type
                 if 'artu' in sub_art.keys():
                     for artu in sub_art['artu'].values():
-                        key = art['phoneme']+' '+sub_art['phoneme']+' '+artu['phoneme']
+                        key = art['phoneme']+' '+sub_art['phoneme']
+                        + ' '+artu['phoneme']
                         art_dict[key] = []
                         for artp in artu['artp'].values():
-                            art_dict[key].append({'snd': artp['snd'], 'epr': artp['epr']})
-    ddi_data['art'] = {key: art_dict[key] for key in sorted(art_dict.keys())}
+                            art_dict[key].append({'snd': artp['snd'],
+                                                  'epr': artp['epr']})
+    ddi_data_dict['art'] = {key: art_dict[key]
+                            for key in sorted(art_dict.keys())}
 
-    with open(os.path.join(dst_path, 'ddi.yml'), mode='w', encoding='utf-8') as ddi_f:
-        ddi_str = yaml.dump(ddi_data, default_flow_style=False,
+    with open(os.path.join(dst_path, 'ddi.yml'), mode='w',
+              encoding='utf-8') as ddi_f:
+        ddi_str = yaml.dump(ddi_data_dict, default_flow_style=False,
                             sort_keys=False)
         ddi_f.write(ddi_str)
 
 
-def read_phdc(ddi_data: io.BytesIO) -> dict:
+def read_phdc(ddi_data: io.BytesIO):
+    phdc_data: dict[str, dict[int, list[str]]
+                    | dict[str, dict[int, str]]
+                    | dict[str, list[str]]
+                    | str]
     phdc_data = {}
     # DBSe
     assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
@@ -220,8 +247,8 @@ def read_phdc(ddi_data: io.BytesIO) -> dict:
     return phdc_data
 
 
-def read_tdb(ddi_data: io.BytesIO) -> dict[str]:
-    tdb_data: dict[str] = {}
+def read_tdb(ddi_data: io.BytesIO) -> dict[int, str]:
+    tdb_data: dict[int, str] = {}
     assert ddi_data.read(8) == b'\xFF'*8
     assert ddi_data.read(4).decode() == 'TDB '
     assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -249,7 +276,7 @@ def read_tdb(ddi_data: io.BytesIO) -> dict[str]:
     return tdb_data
 
 
-def read_dbv(ddi_data: io.BytesIO):
+def read_dbv(ddi_data: io.BytesIO) -> None:
     assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
     assert ddi_data.read(4).decode() == 'DBV '
     assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -257,8 +284,8 @@ def read_dbv(ddi_data: io.BytesIO):
     assert int.from_bytes(ddi_data.read(4), byteorder='little') == 5
 
 
-def read_sta(ddi_data: io.BytesIO) -> dict:
-    sta_data = {}
+def read_sta(ddi_data: io.BytesIO) -> dict[int, artu_type]:
+    sta_data: dict[int, artu_type] = {}
     assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
     assert int.from_bytes(read_arr(ddi_data), byteorder='little') == 1
     assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
@@ -269,7 +296,7 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
     assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
     stau_num = int.from_bytes(ddi_data.read(4), byteorder='little')
     for i in range(stau_num):
-        stau_data = {'phoneme': '', 'stap': {}}
+        stau_data: artu_type = {'phoneme': '', 'stap': {}}
         assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
         assert ddi_data.read(4).decode() == 'STAu'
         assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -279,7 +306,7 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
         assert ddi_data.read(8) == b'\xFF'*8
         stap_num = int.from_bytes(ddi_data.read(4), byteorder='little')
         for j in range(stap_num):
-            stap_data = {'snd': '', 'snd_unknown': '', 'epr': []}
+            stap_data: artp_type = {'snd': '', 'snd_unknown': '', 'epr': []}
             assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
             assert ddi_data.read(4).decode() == 'STAp'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -308,12 +335,14 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
             epr_num = int.from_bytes(ddi_data.read(4), byteorder='little')
             epr_list: list[str] = []
             for k in range(epr_num):
-                epr_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
+                epr_offset = int.from_bytes(ddi_data.read(8),
+                                            byteorder='little')
                 epr_list.append(f'{epr_offset:0>8x}')
             stap_data['epr'] = epr_list
             assert ddi_data.read(4) == b'\x44\xAC\x00\x00'
             assert ddi_data.read(2) == b'\x01\x00'
-            snd_identifier = int.from_bytes(ddi_data.read(4), byteorder='little')
+            snd_identifier = int.from_bytes(ddi_data.read(4),
+                                            byteorder='little')
             # TODO: why this number?
             snd_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
             stap_data['snd'] = f'{snd_offset-0x812:016x}_{snd_identifier:08x}'
@@ -333,8 +362,8 @@ def read_sta(ddi_data: io.BytesIO) -> dict:
     return sta_data
 
 
-def read_art(ddi_data: io.BytesIO) -> dict:
-    total_art_data = {}
+def read_art(ddi_data: io.BytesIO) -> dict[int, art_type]:
+    total_art_data: dict[int, art_type] = {}
     assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
     assert int.from_bytes(read_arr(ddi_data), byteorder='little') != 0
     while(True):
@@ -347,12 +376,13 @@ def read_art(ddi_data: io.BytesIO) -> dict:
         assert ddi_data.read(4).decode() == 'ART '
         art_idx, art_data = read_art_block(ddi_data)
         total_art_data[art_idx] = art_data
-    total_art_data = {key: total_art_data[key] for key in sorted(total_art_data.keys())}
+    total_art_data = {key: total_art_data[key]
+                      for key in sorted(total_art_data.keys())}
     return total_art_data
 
 
-def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
-    art_data = {'phoneme': '', 'artu': {}, 'art': {}}
+def read_art_block(ddi_data: io.BytesIO) -> tuple[int, art_type]:
+    art_data: art_type = {'phoneme': '', 'artu': {}, 'art': {}}
     assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
     assert int.from_bytes(ddi_data.read(4), byteorder='little') == 1
     assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -360,7 +390,7 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
     artu_num = int.from_bytes(ddi_data.read(4), byteorder='little')
     i = -1
     for i in range(artu_num):
-        artu_data = {'phoneme': '', 'artp': {}}
+        artu_data: artu_type = {'phoneme': '', 'artp': {}}
         assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0
         block_type = ddi_data.read(4).decode()
         if block_type == 'ART ':
@@ -379,7 +409,7 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
         assert ddi_data.read(8) == b'\xFF'*8
         artp_num = int.from_bytes(ddi_data.read(4), byteorder='little')
         for j in range(artp_num):
-            artp_data = {'snd': '', 'snd_unknown': '', 'epr': []}
+            artp_data: artp_type = {'snd': '', 'snd_unknown': '', 'epr': []}
             artp_data['unknown0'] = bytes_to_str(ddi_data.read(8))
             assert ddi_data.read(4).decode() == 'ARTp'
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
@@ -407,20 +437,25 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
             epr_num = int.from_bytes(ddi_data.read(4), byteorder='little')
             epr_list: list[str] = []
             for k in range(epr_num):
-                epr_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
+                epr_offset = int.from_bytes(ddi_data.read(8),
+                                            byteorder='little')
                 epr_list.append(f'{epr_offset:0>8x}')
             artp_data['epr'] = epr_list
             assert ddi_data.read(4) == b'\x44\xAC\x00\x00'
             assert ddi_data.read(2) == b'\x01\x00'
-            snd_identifier = int.from_bytes(ddi_data.read(4), byteorder='little')
+            snd_identifier = int.from_bytes(ddi_data.read(4),
+                                            byteorder='little')
             # TODO: why this number?
             snd_offset = int.from_bytes(ddi_data.read(8), byteorder='little')
             artp_data['snd'] = f'{snd_offset-0x12:016x}_{snd_identifier:08x}'
-            assert int.from_bytes(ddi_data.read(8), byteorder='little') == snd_offset+0x800
+            assert int.from_bytes(ddi_data.read(8),
+                                  byteorder='little'
+                                  ) == snd_offset+0x800
 
             ddi_bytes: bytes = env['ddi_bytes'][ddi_data.tell():]
             unknown2_length = ddi_bytes.find(b'default')-4
-            artp_data['unknown2'] = bytes_to_str(ddi_data.read(unknown2_length))
+            artp_data['unknown2'] = bytes_to_str(ddi_data.read(
+                unknown2_length))
             # print(f'{unknown2_length:x}')
             assert read_str(ddi_data) == 'default'
 
@@ -442,8 +477,8 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, dict]:
     return art_idx, art_data
 
 
-def read_vqm(ddi_data: io.BytesIO) -> dict:
-    vqm_data = {}
+def read_vqm(ddi_data: io.BytesIO) -> dict[int, artp_type]:
+    vqm_data: dict[int, artp_type] = {}
     assert ddi_data.read(8) == b'\xFF'*8
     assert int.from_bytes(read_arr(ddi_data), byteorder='little') == 3
     assert ddi_data.read(8) == b'\xFF'*8
@@ -484,7 +519,8 @@ def read_vqm(ddi_data: io.BytesIO) -> dict:
         assert int.from_bytes(ddi_data.read(4), byteorder='little') == 1
         vqmp_data['unknown'] = bytes_to_str(ddi_data.read(0x12))
         assert ddi_data.read(8) == b'\x00\x00\x00\x00\x9A\x99\x19\x3F'
-        bytes_to_str(ddi_data.read(4))    # TODO: that may not be same as env['unknown']
+        # TODO: that may not be same as env['unknown']
+        bytes_to_str(ddi_data.read(4))
         assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
         assert ddi_data.read(4) == b'\xFF'*4
         epr_num = int.from_bytes(ddi_data.read(4), byteorder='little')

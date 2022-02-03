@@ -5,8 +5,10 @@ import os
 import zipfile
 import yaml
 
+from typing import Sequence
 
-def parse_args(args=None) -> str:
+
+def parse_args(args: Sequence[str] = None) -> str:
     # initialize parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--work_dir', required=True,
@@ -14,8 +16,8 @@ def parse_args(args=None) -> str:
                         '"ddi.yml" and "wav.zip".')
 
     # parse args
-    args = parser.parse_args(args)
-    work_dir: str = os.path.normpath(args.work_dir)
+    args_result = parser.parse_args(args)
+    work_dir: str = os.path.normpath(args_result.work_dir)
     return work_dir
 
 

@@ -5,14 +5,15 @@ import io
 import os
 import wave
 import zipfile
-
 from wave import Wave_write
+
+from typing import Sequence
 
 start_encode = 'SND '.encode()
 wav_params = (1, 2, 44100, 0, 'NONE', 'NONE')
 
 
-def parse_args(args=None):  # : list[str]
+def parse_args(args: Sequence[str] = None):  # : list[str]
     # initialize parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--src_path', required=True,
@@ -28,11 +29,11 @@ def parse_args(args=None):  # : list[str]
                         'default to be 0')
 
     # parse args
-    args = parser.parse_args(args)
-    src_path: str = os.path.normpath(args.src_path)
-    dst_path: str = args.dst_path
-    merge: bool = args.merge
-    silence_interval: float = args.silence_interval
+    args_result = parser.parse_args(args)
+    src_path: str = os.path.normpath(args_result.src_path)
+    dst_path: str = args_result.dst_path
+    merge: bool = args_result.merge
+    silence_interval: float = args_result.silence_interval
     silence_bytes = int(wav_params[1]*wav_params[2]*silence_interval)
 
     if dst_path is None:
