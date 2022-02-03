@@ -10,10 +10,11 @@ start_encode = 'FRM2'.encode()
 def parse_args(args=None):  # : list[str]
     # initialize parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src-path', required=True,
+    parser.add_argument('--src_path', required=True,
                         help='source ddb file path')
-    parser.add_argument('--dst-path',
-                        help='destination extract path, default to be "./[name]/frm2.zip"')
+    parser.add_argument('--dst_path',
+                        help='destination extract path, '
+                        'default to be "./[name]/frm2.zip"')
 
     # parse args
     args = parser.parse_args(args)

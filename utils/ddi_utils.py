@@ -25,60 +25,74 @@ def read_arr(data: io.BytesIO) -> bytes:
 # ----------------------------------------- #
 
 
-def read_ddi(ddi_bytes: bytes, dst_path: str):
+def read_ddi(ddi_bytes: bytes, dst_path: str, save_temp: bool = False, cat_only: bool = False):
+    if cat_only:
+        with open(os.path.join(dst_path, 'sta.yml'), mode='r', encoding='utf-8') as sta_f:
+            sta_data = yaml.load(sta_f)
+        with open(os.path.join(dst_path, 'art.yml'), mode='r', encoding='utf-8') as art_f:
+            art_data = yaml.load(art_f)
+        vqm_data = None
+        if os.path.isfile(os.path.join(dst_path, 'vqm.yml')):
+            with open(os.path.join(dst_path, 'vqm.yml'), mode='r', encoding='utf-8') as vqm_f:
+                vqm_data = yaml.load(vqm_f)
+    else:
+        env['ddi_bytes'] = ddi_bytes
+        ddi_data = io.BytesIO(ddi_bytes)
+        # PHDC
+        phdc_data = read_phdc(ddi_data)
+        if save_temp:
+            with open(os.path.join(dst_path, 'phdc.yml'), mode='w', encoding='utf-8') as phdc_f:
+                phdc_str = yaml.dump(phdc_data, default_flow_style=False,
+                                     sort_keys=False)
+                phdc_f.write(phdc_str)
 
-    env['ddi_bytes'] = ddi_bytes
-    ddi_data = io.BytesIO(ddi_bytes)
-    # PHDC
-    phdc_data = read_phdc(ddi_data)
-    with open(os.path.join(dst_path, 'phdc.yml'), mode='w', encoding='utf-8') as phdc_f:
-        phdc_str = yaml.dump(phdc_data, default_flow_style=False,
-                             sort_keys=False)
-        phdc_f.write(phdc_str)
+        # TDB
+        tdb_offset = ddi_bytes.find(b'\xFF'*8+b'TDB ')
+        ddi_data.seek(tdb_offset)
+        tdb_data = read_tdb(ddi_data)
+        if save_temp:
+            with open(os.path.join(dst_path, 'tdb.yml'), mode='w', encoding='utf-8') as tdb_f:
+                tdb_str = yaml.dump(tdb_data, default_flow_style=False,
+                                    sort_keys=False)
+                tdb_f.write(tdb_str)
 
-    # TDB
-    tdb_offset = ddi_bytes.find(b'\xFF'*8+b'TDB ')
-    ddi_data.seek(tdb_offset)
-    tdb_data = read_tdb(ddi_data)
-    with open(os.path.join(dst_path, 'tdb.yml'), mode='w', encoding='utf-8') as tdb_f:
-        tdb_str = yaml.dump(tdb_data, default_flow_style=False,
-                            sort_keys=False)
-        tdb_f.write(tdb_str)
+        # DBV
+        dbv_offset = ddi_bytes.find(b'\x00'*8+b'DBV ')
+        ddi_data.seek(dbv_offset)
+        read_dbv(ddi_data)
 
-    # DBV
-    dbv_offset = ddi_bytes.find(b'\x00'*8+b'DBV ')
-    ddi_data.seek(dbv_offset)
-    read_dbv(ddi_data)
+        # STA
+        sta_offset = ddi_bytes.find(b'\x00'*8+b'STA ')-0x14-8
+        ddi_data.seek(sta_offset)
+        sta_data = read_sta(ddi_data)
+        if save_temp:
+            with open(os.path.join(dst_path, 'sta.yml'), mode='w', encoding='utf-8') as sta_f:
+                sta_str = yaml.dump(sta_data, default_flow_style=False,
+                                    sort_keys=False)
+                sta_f.write(sta_str)
 
-    # STA
-    sta_offset = ddi_bytes.find(b'\x00'*8+b'STA ')-0x14-8
-    ddi_data.seek(sta_offset)
-    sta_data = read_sta(ddi_data)
-    with open(os.path.join(dst_path, 'sta.yml'), mode='w', encoding='utf-8') as sta_f:
-        sta_str = yaml.dump(sta_data, default_flow_style=False,
-                            sort_keys=False)
-        sta_f.write(sta_str)
+        # ART
+        art_offset = ddi_bytes.find(b'\x00'*8+b'ART ')-0x14-8
+        ddi_data.seek(art_offset)
+        art_data = read_art(ddi_data)
+        if save_temp:
+            with open(os.path.join(dst_path, 'art.yml'), mode='w', encoding='utf-8') as art_f:
+                art_str = yaml.dump(art_data, default_flow_style=False,
+                                    sort_keys=False)
+                art_f.write(art_str)
 
-    # ART
-    art_offset = ddi_bytes.find(b'\x00'*8+b'ART ')-0x14-8
-    ddi_data.seek(art_offset)
-    art_data = read_art(ddi_data)
-    with open(os.path.join(dst_path, 'art.yml'), mode='w', encoding='utf-8') as art_f:
-        art_str = yaml.dump(art_data, default_flow_style=False,
-                            sort_keys=False)
-        art_f.write(art_str)
-
-    # VQM
-    vqm_offset = ddi_bytes.find(b'\xFF'*8+b'VQM ')
-    vqm_data = None
-    if vqm_offset != -1:
-        vqm_offset -= 0xC2
-        ddi_data.seek(vqm_offset)
-        vqm_data = read_vqm(ddi_data)
-        with open(os.path.join(dst_path, 'vqm.yml'), mode='w', encoding='utf-8') as vqm_f:
-            vqm_str = yaml.dump(vqm_data, default_flow_style=False,
-                                sort_keys=False)
-            vqm_f.write(vqm_str)
+        # VQM
+        vqm_offset = ddi_bytes.find(b'\xFF'*8+b'VQM ')
+        vqm_data = None
+        if vqm_offset != -1:
+            vqm_offset -= 0xC2
+            ddi_data.seek(vqm_offset)
+            vqm_data = read_vqm(ddi_data)
+            if save_temp:
+                with open(os.path.join(dst_path, 'vqm.yml'), mode='w', encoding='utf-8') as vqm_f:
+                    vqm_str = yaml.dump(vqm_data, default_flow_style=False,
+                                        sort_keys=False)
+                    vqm_f.write(vqm_str)
 
     # DDI convert
     ddi_data = {
@@ -92,16 +106,16 @@ def read_ddi(ddi_bytes: bytes, dst_path: str):
             'sta': {},
             'art': {},
         }
-        vqm_dict = {}
+        vqm_dict = []
         for idx, vqmp in vqm_data.items():
-            vqm_dict[idx] = {'snd': vqmp['snd'], 'epr': vqmp['epr']}
+            vqm_dict.append({'snd': vqmp['snd'], 'epr': vqmp['epr']})
         ddi_data['vqm'] = {'vqm': vqm_dict}
 
     sta_dict = {}
     for stau in sta_data.values():
-        stau_dict = {}
+        stau_dict = []
         for idx, stap in stau['stap'].items():
-            stau_dict[idx] = {'snd': stap['snd'], 'epr': stap['epr']}
+            stau_dict.append({'snd': stap['snd'], 'epr': stap['epr']})
         sta_dict[stau['phoneme']] = stau_dict
     ddi_data['sta'] = {key: sta_dict[key] for key in sorted(sta_dict.keys())}
 

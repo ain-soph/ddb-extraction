@@ -15,14 +15,17 @@ wav_params = (1, 2, 44100, 0, 'NONE', 'NONE')
 def parse_args(args=None):  # : list[str]
     # initialize parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src-path', required=True,
+    parser.add_argument('--src_path', required=True,
                         help='source ddb file path')
-    parser.add_argument('--dst-path',
-                        help='destination extract path, default to be "./[name]/wav.zip (merge.wav)"')
-    parser.add_argument('--merge', help='enable to generate a merged large wav file',
-                        action='store_true')
-    parser.add_argument('--silence-interval', help='silence interval seconds when "merge" is enabled, default to be 0',
-                        type=float, default=0.0)
+    parser.add_argument('--dst_path',
+                        help='destination extract path, '
+                        'default to be "./[name]/wav.zip (merge.wav)"')
+    parser.add_argument('--merge', action='store_true',
+                        help='enable to generate a merged large wav file')
+    parser.add_argument('--silence_interval', type=float, default=0.0,
+                        help='silence interval seconds '
+                        'when "merge" is enabled, '
+                        'default to be 0')
 
     # parse args
     args = parser.parse_args(args)

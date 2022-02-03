@@ -5,11 +5,15 @@ import argparse
 import os
 
 
-def parse_args(args: list[str] = None):
+def parse_args(args: list[str] = None) -> tuple[str, str, bool, bool]:
     # initialize parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src-path', required=True,
+    parser.add_argument('--src_path', required=True,
                         help='source ddi file path')
+    parser.add_argument('--save_temp', action='store_true',
+                        help='save temp files')
+    parser.add_argument('--cat_only', action='store_true',
+                        help='only concat ddi.yml, assuming temp files exist.')
 
     # parse args
     args = parser.parse_args(args)
@@ -21,14 +25,15 @@ def parse_args(args: list[str] = None):
     dst_path = os.path.join(src_dir, src_name)
     if not os.path.isdir(dst_path):
         os.makedirs(dst_path)
-    return src_path, dst_path
+    return src_path, dst_path, args.save_temp, args.cat_only
 
 
 def main():
-    src_path, dst_path = parse_args()
+    src_path, dst_path, cat_only, save_temp = parse_args()
     with open(src_path, 'rb') as ddi_f:
         ddi_bytes = ddi_f.read()
-    read_ddi(ddi_bytes, dst_path)
+    read_ddi(ddi_bytes, dst_path,
+             save_temp=save_temp, cat_only=cat_only)
 
 
 if __name__ == '__main__':

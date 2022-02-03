@@ -9,7 +9,9 @@ usage: extract_ddi.py [-h] --src-path SRC_PATH
 
 optional arguments:
   -h, --help           show this help message and exit
-  --src-path SRC_PATH  source ddi file path
+  --src_path SRC_PATH  source ddi file path
+  --save_temp          save temp files
+  --cat_only           only concat ddi.yml, assuming temp files exist.
 ```
 
 ```
@@ -17,10 +19,10 @@ usage: extract_wav.py [-h] --src-path SRC_PATH [--dst-path DST_PATH] [--merge] [
 
 optional arguments:
   -h, --help            show this help message and exit
-  --src-path SRC_PATH   source ddb file path
-  --dst-path DST_PATH   destination extract path, default to be "./[name]/wav.zip (merge.wav)"
+  --src_path SRC_PATH   source ddb file path
+  --dst_path DST_PATH   destination extract path, default to be "./[name]/wav.zip (merge.wav)"
   --merge               enable to generate a merged large wav file
-  --silence-interval SILENCE_INTERVAL
+  --silence_interval SILENCE_INTERVAL
                         silence interval seconds when "merge" is enabled, default to be 0
 ```
 
@@ -30,52 +32,59 @@ usage: extract_frm2.py [-h] --src-path SRC_PATH [--dst-path DST_PATH]
 
 optional arguments:
   -h, --help           show this help message and exit
-  --src-path SRC_PATH  source ddb file path
-  --dst-path DST_PATH  destination extract path, default to be "./[name]/frm2.zip"
+  --src_path SRC_PATH  source ddb file path
+  --dst_path DST_PATH  destination extract path, default to be "./[name]/frm2.zip"
 ```
 
+```
+usage: rename_wav.py [-h] --work_dir WORK_DIR
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --work_dir WORK_DIR  working directory containing "ddi.yml" and "wav.zip".
+```
 
 # ddi.yml
 `ddi.yml` file strucutre:
 ```
 {
   'vqm': {
-          'vqm': {
-              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
-                      }
+          'vqm': [
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+          ],
           }
 
   'sta': {
-          'phoneme': {
-              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
-                      }
-          'phoneme': {
-              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
-                      }
+          'phoneme': [
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+          ],
+          'phoneme': [
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+          ],
           }
 
   'art': {
-          'phoneme[space]phoneme': {
-              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
-                      }
-          'phoneme[space]phoneme': {
-              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
-                      }
-          'phoneme[space]phoneme[space]phoneme': {
-              idx1: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx2: {'snd': XXX, 'epr': [XXX,XXX,...]}
-              idx3: {'snd': XXX, 'epr': [XXX,XXX,...]}
-                      }
+          'phoneme[space]phoneme': [
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+          ],
+          'phoneme[space]phoneme': [
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+          ],
+          'phoneme[space]phoneme[space]phoneme': [
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+              {'snd': XXX, 'epr': [XXX,XXX,...]},
+          ],
           }
 }
 ```

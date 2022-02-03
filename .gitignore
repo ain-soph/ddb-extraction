@@ -2,3 +2,8 @@ ddi_data/
 __pycache__
 
 test.py
+
+*.ddb
+*.ddi
+
+/Luotianyi_CHN_Meng
