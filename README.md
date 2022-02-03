@@ -5,7 +5,7 @@ Extract the samples of a `ddb/ddi` Vocaloid file.
 ## Usage:
 
 ```
-usage: extract_ddi.py [-h] --src-path SRC_PATH
+usage: extract_ddi.py [-h] --src_path SRC_PATH
 
 optional arguments:
   -h, --help           show this help message and exit
@@ -15,7 +15,7 @@ optional arguments:
 ```
 
 ```
-usage: extract_wav.py [-h] --src-path SRC_PATH [--dst-path DST_PATH] [--merge] [--silence-interval SILENCE_INTERVAL]
+usage: extract_wav.py [-h] --src_path SRC_PATH [--dst_path DST_PATH] [--merge] [--silence_interval SILENCE_INTERVAL]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -28,7 +28,7 @@ optional arguments:
 
 
 ```
-usage: extract_frm2.py [-h] --src-path SRC_PATH [--dst-path DST_PATH]
+usage: extract_frm2.py [-h] --src_path SRC_PATH [--dst_path DST_PATH]
 
 optional arguments:
   -h, --help           show this help message and exit
