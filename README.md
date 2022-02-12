@@ -27,8 +27,9 @@ python ./extract_frm2.py --src_path ./Luotianyi_CHN_Meng.ddb
 1. Download and install [miniconda](https://docs.conda.io/en/latest/miniconda.html)  
    At the end installation, remember to set `conda init` as yes (or run it manually).
 2. Create a python 3.10 environment by running `conda create -n py310 python=3.10`
-3. `pip install pyyaml`
-4. Run the scripts following the previous example!
+3. Activate your new environment: `conda activate py310`
+4. Install the required dependencies: `pip install pyyaml`
+5. Run the scripts following the previous example!
 
 ## Usage:
 
