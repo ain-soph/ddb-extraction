@@ -6,6 +6,30 @@
 
 Extract the samples of a `ddb/ddi` Vocaloid file.
 
+## Requirements
+```
+pip install pyyaml
+```
+
+## Examples
+```
+python ./extract_wav.py --src_path ./Luotianyi_CHN_Meng.ddb
+python ./extract_ddi.py --src_path ./Luotianyi_CHN_Meng.ddi
+python ./rename_wav.py --work_dir ./Luotianyi_CHN_Meng
+```
+
+FRM2 files are not necessary for the wav workflow, so only run the following command if you have special desire for the extracted frm2 files:  
+```
+python ./extract_frm2.py --src_path ./Luotianyi_CHN_Meng.ddb
+```
+
+## Guide for Python Beginners
+1. Download and install [miniconda](https://docs.conda.io/en/latest/miniconda.html)  
+   At the end installation, remember to set `conda init` as yes (or run it manually).
+2. Create a python 3.10 environment by running `conda create -n py310 python=3.10`
+3. `pip install pyyaml`
+4. Run the scripts following the previous example!
+
 ## Usage:
 
 ```
