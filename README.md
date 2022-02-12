@@ -1,6 +1,9 @@
 # ddb-extraction
 ![python>=3.10](https://img.shields.io/badge/python->=3.10-informational.svg)
 
+> OneNote Link about ddi/ddb file strcutures:  
+> https://1drv.ms/u/s!AgxVwvz3Kj1Ek49YzGjngt49krIZvQ
+
 Extract the samples of a `ddb/ddi` Vocaloid file.
 
 ## Usage:
