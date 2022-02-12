@@ -1,4 +1,5 @@
 # ddb-extraction
+![python>=3.10](https://img.shields.io/badge/python->=3.10.0-informational.svg)
 
 Extract the samples of a `ddb/ddi` Vocaloid file.
 
