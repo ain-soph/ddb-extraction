@@ -4,7 +4,7 @@
 > OneNote Link about ddi/ddb file strcutures:  
 > https://1drv.ms/u/s!AgxVwvz3Kj1Ek49YzGjngt49krIZvQ
 
-Extract the samples of a `ddb/ddi` Vocaloid file.
+Extract the samples of a `ddb/ddi` Vocaloid soundbank.
 
 ## Requirements
 ```
@@ -13,14 +13,14 @@ pip install pyyaml
 
 ## Examples
 ```
-python ./extract_wav.py --src_path ./Luotianyi_CHN_Meng.ddb
-python ./extract_ddi.py --src_path ./Luotianyi_CHN_Meng.ddi
-python ./rename_wav.py --work_dir ./Luotianyi_CHN_Meng
+python ./extract_wav.py --src_path ./XXX.ddb
+python ./extract_ddi.py --src_path ./XXX.ddi
+python ./rename_wav.py --work_dir ./XXX
 ```
 
 FRM2 files are not necessary for the wav workflow, so only run the following command if you have special desire for the extracted frm2 files:  
 ```
-python ./extract_frm2.py --src_path ./Luotianyi_CHN_Meng.ddb
+python ./extract_frm2.py --src_path ./XXX.ddb
 ```
 
 ## Guide for Python Beginners
