@@ -4,7 +4,7 @@
 > OneNote Link about ddi/ddb file strcutures:  
 > https://1drv.ms/u/s!AgxVwvz3Kj1Ek49YzGjngt49krIZvQ
 
-Extract the samples of a `ddb/ddi` Vocaloid soundbank.
+Extract the samples of `ddb/ddi` soundbanks.
 
 ## Requirements
 ```
