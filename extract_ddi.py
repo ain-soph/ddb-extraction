@@ -29,7 +29,7 @@ def parse_args(args: list[str] = None) -> tuple[str, str, bool, bool]:
 
 
 def main():
-    src_path, dst_path, cat_only, save_temp = parse_args()
+    src_path, dst_path, save_temp, cat_only = parse_args()
     with open(src_path, 'rb') as ddi_f:
         ddi_bytes = ddi_f.read()
     read_ddi(ddi_bytes, dst_path,

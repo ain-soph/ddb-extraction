@@ -1,9 +1,11 @@
 ddi_data/
 __pycache__
 
+/.vscode
 test.py
 
 *.ddb
 *.ddi
 
 /Luotianyi_CHN_Meng
+/ARSLOID

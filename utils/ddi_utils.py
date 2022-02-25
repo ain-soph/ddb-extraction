@@ -150,8 +150,7 @@ def read_ddi(ddi_bytes: bytes, dst_path: str,
                 sub_art: art_type
                 if 'artu' in sub_art.keys():
                     for artu in sub_art['artu'].values():
-                        key = art['phoneme']+' '+sub_art['phoneme']
-                        + ' '+artu['phoneme']
+                        key = art['phoneme']+' '+sub_art['phoneme']+' '+artu['phoneme']
                         art_dict[key] = []
                         for artp in artu['artp'].values():
                             art_dict[key].append({'snd': artp['snd'],
@@ -315,10 +314,11 @@ def read_sta(ddi_data: io.BytesIO) -> dict[int, artu_type]:
             stap_data['unknown1'] = bytes_to_str(ddi_data.read(0x12))
             assert ddi_data.read(8) == b'\x00\x00\x00\x00\x9A\x99\x19\x3F'
             unknown = bytes_to_str(ddi_data.read(4))
-            if env['unknown'] is None:
-                env['unknown'] = unknown
-            else:
-                assert env['unknown'] == unknown
+            # print(f'sta {i:4d} {j:4d} {unknown}')
+            # if env['unknown'] is None:
+            #     env['unknown'] = unknown
+            # else:
+            #     assert env['unknown'] == unknown
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 2
             assert int.from_bytes(ddi_data.read(8), byteorder='little') == 0x3D
@@ -418,10 +418,11 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, art_type]:
             artp_data['unknown1'] = bytes_to_str(ddi_data.read(0x12))
             assert ddi_data.read(8) == b'\x00\x00\x00\x00\x9A\x99\x19\x3F'
             unknown = bytes_to_str(ddi_data.read(4))
-            if env['unknown'] is None:
-                env['unknown'] = unknown
-            else:
-                assert env['unknown'] == unknown
+            # print(f'art {i:4d} {j:4d} {unknown}')
+            # if env['unknown'] is None:
+            #     env['unknown'] = unknown
+            # else:
+            #     assert env['unknown'] == unknown
             assert int.from_bytes(ddi_data.read(4), byteorder='little') == 2
             # TODO: This doesn't seem to be an index actually
             artp_idx = int.from_bytes(ddi_data.read(8), byteorder='little')
