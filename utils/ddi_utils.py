@@ -280,7 +280,7 @@ def read_dbv(ddi_data: io.BytesIO) -> None:
     assert ddi_data.read(4).decode() == 'DBV '
     assert int.from_bytes(ddi_data.read(4), byteorder='little') == 0
     assert int.from_bytes(ddi_data.read(8), byteorder='little') == 1
-    assert int.from_bytes(ddi_data.read(4), byteorder='little') == 5
+    int.from_bytes(ddi_data.read(4), byteorder='little')    # 4 for AVANNA, 5 for others?
 
 
 def read_sta(ddi_data: io.BytesIO) -> dict[int, artu_type]:
