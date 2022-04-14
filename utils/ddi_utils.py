@@ -333,7 +333,7 @@ def read_sta(ddi_data: io.BytesIO) -> dict[int, artu_type]:
             assert ddi_data.read(4).decode() == 'EMPT'
             int.from_bytes(ddi_data.read(4), byteorder='little')  # == 0 Exception: Tonio.ddi
             assert read_str(ddi_data) == 'EpR'
-            assert ddi_data.read(4)  # == b'\xFF'*4  Exception: Tonio.ddi (epr_num)
+            ddi_data.read(4)  # == b'\xFF'*4  Exception: Tonio.ddi (epr_num)
             epr_num = int.from_bytes(ddi_data.read(4), byteorder='little')
             epr_list: list[str] = []
             for k in range(epr_num):
