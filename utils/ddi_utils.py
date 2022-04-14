@@ -450,7 +450,7 @@ def read_art_block(ddi_data: io.BytesIO) -> tuple[int, art_type]:
                 assert ddi_data.read(2) == b'\x01\x00'
             except AssertionError:
                 ddi_data.seek(loc)
-                assert ddi_data.read(4)  # == b'\xFF'*4  Exception: Tonio.ddi (epr_num)
+                ddi_data.read(4)  # == b'\xFF'*4  Exception: Tonio.ddi (epr_num)
                 epr_num = int.from_bytes(ddi_data.read(4), byteorder='little')
                 epr_list: list[str] = []
                 for k in range(epr_num):
