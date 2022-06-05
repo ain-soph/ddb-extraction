@@ -7,3 +7,5 @@ test.py
 *.ddb
 *.ddi
 /ddi
+
+*_V*/

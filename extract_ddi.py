@@ -22,7 +22,7 @@ def parse_args(args: list[str] = None) -> tuple[str, str, bool, bool]:
 
     src_dir, src_filename = os.path.split(src_path)
     src_name, src_ext = os.path.splitext(src_filename)
-    dst_path = os.path.join(src_dir, src_name)
+    dst_path = os.path.join(os.curdir, src_name)
     if not os.path.isdir(dst_path):
         os.makedirs(dst_path)
     return src_path, dst_path, args.save_temp, args.cat_only

@@ -40,7 +40,7 @@ def parse_args(args: Sequence[str] = None):  # : list[str]
         src_dir, src_filename = os.path.split(src_path)
         src_name, src_ext = os.path.splitext(src_filename)
         dst_filename = 'merge.wav' if merge else 'wav.zip'
-        dst_path = os.path.join(src_dir, src_name, dst_filename)
+        dst_path = os.path.join(os.curdir, src_name, dst_filename)
     dst_path: str = os.path.normpath(dst_path)
     assert dst_path.endswith('.wav') or dst_path.endswith('.zip')
 
